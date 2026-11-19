@@ -6,14 +6,14 @@
         <!-- Header Navigation -->
         <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs no-print">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-wrap items-center justify-between gap-4 py-3">
+                <div class="flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 py-2.5 sm:py-3">
                     <!-- Official BKK Bandung Branding -->
-                    <div class="flex items-center gap-3.5">
-                        <div class="flex items-center gap-2.5 pr-3.5 border-r border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2.5 pr-3 border-r border-slate-200">
                             <img
                                 :src="`${baseUrl}/images/Logo BKK Bandung.png`"
                                 alt="Kemenkes BKK Bandung"
-                                class="h-9 sm:h-10 w-auto object-contain"
+                                class="h-8 sm:h-10 w-auto object-contain"
                             />
                             <img
                                 :src="`${baseUrl}/images/LOGO KARANTINA.png`"
@@ -32,11 +32,11 @@
                     </div>
 
                     <!-- Navigation Tabs -->
-                    <nav class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                    <nav class="w-full sm:w-auto grid grid-cols-2 sm:flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
                         <button
                             type="button"
                             @click="activeTab = 'scanner'"
-                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer"
                             :class="activeTab === 'scanner'
                                 ? 'bg-white text-teal-700 shadow-xs'
                                 : 'text-slate-600 hover:text-slate-900'"
@@ -47,7 +47,7 @@
                         <button
                             type="button"
                             @click="activeTab = 'history'"
-                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer"
                             :class="activeTab === 'history'
                                 ? 'bg-white text-teal-700 shadow-xs'
                                 : 'text-slate-600 hover:text-slate-900'"
@@ -68,9 +68,12 @@
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            <!-- KPI Summary Strip -->
-            <section class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 no-print">
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 flex flex-col gap-5 sm:gap-6">
+            <!-- KPI Summary Strip (below Scanner on mobile, top on desktop) -->
+            <section
+                class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5 no-print"
+                :class="activeTab === 'scanner' ? 'order-3 lg:order-1' : 'order-2 lg:order-1'"
+            >
                 <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center justify-between gap-3">
                     <div>
                         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Verifikasi</p>
@@ -119,7 +122,7 @@
             <!-- API Error Toast Banner -->
             <div
                 v-if="apiError"
-                class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-800 flex items-center justify-between gap-3 no-print"
+                class="order-1 lg:order-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-800 flex items-center justify-between gap-3 no-print"
             >
                 <div class="flex items-center gap-2">
                     <AlertCircle class="w-4 h-4 text-rose-600 shrink-0" />
@@ -134,8 +137,8 @@
                 </button>
             </div>
 
-            <!-- TAB 1: SCANNER + RESULT WORKSPACE -->
-            <section v-if="activeTab === 'scanner'" class="space-y-6">
+            <!-- TAB 1: SCANNER + RESULT WORKSPACE (Top on mobile, below KPI on desktop) -->
+            <section v-if="activeTab === 'scanner'" class="order-2 lg:order-3 space-y-5 sm:space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                     <!-- Left: Scanner Controls -->
                     <div class="lg:col-span-5 no-print">
@@ -226,7 +229,7 @@
             </section>
 
             <!-- TAB 2: FULL HISTORY & REPORT TABLE -->
-            <section v-if="activeTab === 'history'" class="no-print">
+            <section v-if="activeTab === 'history'" class="order-3 no-print">
                 <VerificationHistoryTable
                     :base-url="baseUrl"
                     :refresh-trigger="historyRefreshTrigger"
