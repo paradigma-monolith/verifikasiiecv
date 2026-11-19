@@ -142,6 +142,7 @@
                         <BarcodeScannerPanel
                             ref="scannerPanel"
                             :loading="verifying"
+                            :paused="Boolean(summaryModalResult)"
                             :allowed-prefixes="allowedPrefixes"
                             :sound-enabled="soundEnabled"
                             @scanned="handleScanned"
@@ -150,7 +151,7 @@
                     </div>
 
                     <!-- Right: Verification Result -->
-                    <div class="lg:col-span-7">
+                    <div ref="resultCardSection" class="lg:col-span-7">
                         <VerificationResultCard
                             :result="currentResult"
                             :loading="verifying"
@@ -235,6 +236,16 @@
             </section>
         </main>
 
+        <!-- Scan Result Summary Pop-Up Modal -->
+        <VerificationSummaryModal
+            :result="summaryModalResult"
+            :rechecking="rechecking"
+            @close="closeSummaryModal"
+            @scan-next="handleSummaryScanNext"
+            @view-detail="handleSummaryViewDetail"
+            @recheck="handleRecheck"
+        />
+
         <!-- Detail Modal (when inspecting from History tab) -->
         <div
             v-if="inspectedRecord"
@@ -293,6 +304,7 @@ import {
 import BarcodeScannerPanel from './components/BarcodeScannerPanel.vue';
 import VerificationResultCard from './components/VerificationResultCard.vue';
 import VerificationHistoryTable from './components/VerificationHistoryTable.vue';
+import VerificationSummaryModal from './components/VerificationSummaryModal.vue';
 import { playVerificationTone } from './utils/soundFeedback';
 
 const props = defineProps({
@@ -304,12 +316,14 @@ const props = defineProps({
 
 const activeTab = ref('scanner');
 const scannerPanel = ref(null);
+const resultCardSection = ref(null);
 const soundEnabled = ref(true);
 
 const verifying = ref(false);
 const rechecking = ref(false);
 const apiError = ref('');
 const currentResult = ref(null);
+const summaryModalResult = ref(null);
 const inspectedRecord = ref(null);
 const recentLogs = ref([]);
 const allowedPrefixes = ref([]);
@@ -363,6 +377,7 @@ async function handleScanned({ url, method }) {
         });
 
         currentResult.value = data.data;
+        summaryModalResult.value = data.data;
         if (soundEnabled.value && data.data?.verification_status) {
             playVerificationTone(data.data.verification_status);
         }
@@ -386,6 +401,7 @@ async function handleRecheck(id) {
     try {
         const { data } = await axios.post(`/api/verifications/${id}/recheck`);
         currentResult.value = data.data;
+        summaryModalResult.value = data.data;
         if (soundEnabled.value && data.data?.verification_status) {
             playVerificationTone(data.data.verification_status);
         }
@@ -416,8 +432,23 @@ async function handleModalRecheck(id) {
     }
 }
 
+function closeSummaryModal() {
+    summaryModalResult.value = null;
+}
+
+function handleSummaryScanNext() {
+    summaryModalResult.value = null;
+    scannerPanel.value?.focusForRescan();
+}
+
+function handleSummaryViewDetail() {
+    summaryModalResult.value = null;
+    resultCardSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function handleReset() {
     currentResult.value = null;
+    summaryModalResult.value = null;
     apiError.value = '';
     scannerPanel.value?.focusForRescan();
 }

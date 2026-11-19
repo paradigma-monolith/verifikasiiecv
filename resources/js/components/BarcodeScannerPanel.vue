@@ -350,6 +350,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    paused: {
+        type: Boolean,
+        default: false,
+    },
     allowedPrefixes: {
         type: Array,
         default: () => [],
@@ -441,7 +445,7 @@ async function startCamera() {
             },
             (decodedText) => {
                 const now = Date.now();
-                if (props.loading) return;
+                if (props.loading || props.paused) return;
                 if (decodedText === lastScannedText && now - lastScannedAt < 3500) return;
 
                 lastScannedText = decodedText;
