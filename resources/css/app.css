@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --color-kemenkes-50: #effbfa;
+    --color-kemenkes-100: #d6f5f2;
+    --color-kemenkes-200: #aee9e4;
+    --color-kemenkes-500: #00b1a9;
+    --color-kemenkes-600: #00918b;
+    --color-kemenkes-700: #007470;
+    --color-kemenkes-lime: #c4d600;
+    --color-karantina-navy: #0f1f4b;
+    --color-karantina-gold: #f4c400;
+}
+
+@layer base {
+    body {
+        background-color: #f3f6f9;
+        color: #0f172a;
+        -webkit-font-smoothing: antialiased;
+    }
+}
+
+@keyframes scan-laser {
+    0% {
+        transform: translateY(8%);
+        opacity: 0.65;
+    }
+    50% {
+        transform: translateY(88%);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(8%);
+        opacity: 0.65;
+    }
+}
+
+.animate-scan-laser {
+    animation: scan-laser 2.4s ease-in-out infinite;
+}
+
+/* Clean styling for html5-qrcode internal video container */
+#eicv-qr-reader video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 0.75rem;
+}
+
+#eicv-qr-reader__scan_region img {
+    display: none !important;
+}
+
+#eicv-qr-reader__dashboard {
+    display: none !important;
+}
+
+/* Official print layout for Bukti Verifikasi */
+@media print {
+    body {
+        background: #ffffff !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+    .print-card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+}
