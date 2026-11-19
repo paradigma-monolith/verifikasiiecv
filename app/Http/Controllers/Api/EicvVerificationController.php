@@ -82,7 +82,7 @@ class EicvVerificationController extends Controller
 
     public function recheck(Request $request, EicvVerification $verification): JsonResponse
     {
-        $result = $this->verifier->verify($verification->scanned_url);
+        $result = $this->verifier->verify($verification->scanned_url, forceRefresh: true);
 
         $verification->update([
             ...$result,

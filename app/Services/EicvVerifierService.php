@@ -7,6 +7,7 @@ use DOMDocument;
 use DOMElement;
 use DOMXPath;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -145,7 +146,7 @@ class EicvVerifierService
      *
      * @return array<string, mixed>
      */
-    public function verify(string $rawUrl): array
+    public function verify(string $rawUrl, bool $forceRefresh = false): array
     {
         $url = trim($rawUrl);
         $matchedPrefix = $this->matchAllowedPrefix($url);
@@ -173,6 +174,18 @@ class EicvVerifierService
         $docNumber = $urlParams['certificate_number'];
         $docType = $urlParams['document_type'];
 
+        $cacheTtl = (int) config('eicv.cache_ttl_seconds', 600);
+        $cacheKey = ($docNumber !== null && $docType !== null)
+            ? 'eicv:sinkarkes:'.strtolower($docType).':'.strtoupper($docNumber)
+            : null;
+
+        if (! $forceRefresh && $cacheKey !== null && $cacheTtl > 0) {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached) && ($cached['found'] ?? false) === true) {
+                return $this->buildFoundResult($url, $matchedPrefix, $cached, 200);
+            }
+        }
+
         $httpStatus = null;
         $lastError = null;
 
@@ -190,10 +203,18 @@ class EicvVerifierService
                     $parsed = $this->parseCertificateHtml($searchResponse->body(), $docNumber, $docType);
 
                     if ($parsed['found']) {
+                        if ($cacheKey !== null && $cacheTtl > 0) {
+                            Cache::put($cacheKey, $parsed, $cacheTtl);
+                        }
+
                         return $this->buildFoundResult($url, $matchedPrefix, $parsed, $httpStatus);
                     }
 
                     if ($parsed['not_found']) {
+                        if ($cacheKey !== null) {
+                            Cache::forget($cacheKey);
+                        }
+
                         return $this->buildNotFoundResult($url, $matchedPrefix, $docNumber, $docType, $httpStatus);
                     }
                 }
@@ -530,16 +551,28 @@ class EicvVerifierService
             $verifyOption = false;
         }
 
+        $curlOptions = [];
+        if (defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+            $curlOptions[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
+        }
+        if (defined('CURLOPT_TCP_FASTOPEN')) {
+            $curlOptions[CURLOPT_TCP_FASTOPEN] = true;
+        }
+
         return Http::withHeaders([
             'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
             'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language' => 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding' => 'gzip, deflate',
+            'Connection' => 'keep-alive',
         ])
-            ->timeout((int) config('eicv.http_timeout', 25))
-            ->connectTimeout((int) config('eicv.connect_timeout', 12))
+            ->timeout((int) config('eicv.http_timeout', 35))
+            ->connectTimeout((int) config('eicv.connect_timeout', 15))
             ->withOptions([
                 'verify' => $verifyOption,
+                'decode_content' => true,
                 'allow_redirects' => ['max' => 5],
+                'curl' => $curlOptions,
             ]);
     }
 

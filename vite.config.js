@@ -28,7 +28,7 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: {
-                    scanner: ['html5-qrcode', 'jsqr'],
+                    qr: ['jsqr'],
                     vendor: ['vue', 'axios', 'lucide-vue-next'],
                 },
             },

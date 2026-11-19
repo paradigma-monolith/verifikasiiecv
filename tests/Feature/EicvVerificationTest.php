@@ -254,4 +254,37 @@ HTML;
 
         $this->assertDatabaseMissing('eicv_verifications', ['id' => $created['id']]);
     }
+
+    public function test_verified_certificate_is_cached_and_recheck_bypasses_cache(): void
+    {
+        Http::fake([
+            'https://sinkarkes.kemkes.go.id/welcome/check_document/search*' => Http::response(
+                $this->sampleSinkarkesCertificateHtml(),
+                200
+            ),
+        ]);
+
+        $url = 'https://sinkarkes.kemkes.go.id/index.php/welcome/check_document?t=RTI2LTAwMTEzMDYwMy5pY3Y=';
+
+        $first = $this->postJson('/api/verifications/verify', [
+            'scanned_url' => $url,
+            'scan_method' => 'camera',
+        ])->assertCreated();
+
+        // Second scan within TTL uses cached SINKARKES response (still saves new log row)
+        $this->postJson('/api/verifications/verify', [
+            'scanned_url' => $url,
+            'scan_method' => 'camera',
+        ])->assertCreated()
+            ->assertJsonPath('data.holder_name', 'A Badruhida***');
+
+        Http::assertSentCount(1);
+
+        // Recheck explicitly bypasses cache and hits SINKARKES live again
+        $this->postJson('/api/verifications/'.$first->json('data.id').'/recheck')
+            ->assertOk()
+            ->assertJsonPath('data.holder_name', 'A Badruhida***');
+
+        Http::assertSentCount(2);
+    }
 }

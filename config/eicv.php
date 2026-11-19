@@ -77,4 +77,5 @@ return [
     'connect_timeout' => (int) env('EICV_CONNECT_TIMEOUT', 15),
     'verify_ssl' => env('EICV_VERIFY_SSL', true),
     'ca_bundle' => env('EICV_CA_BUNDLE', storage_path('certs/cacert.pem')),
+    'cache_ttl_seconds' => (int) env('EICV_CACHE_TTL', 600),
 ];
